@@ -1,0 +1,136 @@
+@import "tailwindcss";
+
+@plugin "@tailwindcss/typography";
+
+html,
+body,
+#root {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: #080d1a;
+    color: #e2e8f0;
+    font-family: "Inter", "Segoe UI", Arial, sans-serif;
+}
+
+/* ─── Global scrollbar ─────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0d1424; }
+::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #c9a84c; }
+
+/* ─── Tailwind slate overrides → deep navy palette ─── */
+.bg-slate-950 { background-color: #080d1a !important; }
+.bg-slate-900 { background-color: #0d1424 !important; }
+.bg-slate-800 { background-color: #111d35 !important; }
+.bg-slate-700 { background-color: #162444 !important; }
+
+.text-slate-400 { color: #7a90b0 !important; }
+.text-slate-300 { color: #a0b4cc !important; }
+
+.border-slate-700 { border-color: #1e3a5f !important; }
+.border-slate-600 { border-color: #1e3a5f !important; }
+
+.hover\:bg-slate-800:hover { background-color: #111d35 !important; }
+.hover\:bg-slate-700:hover { background-color: #162444 !important; }
+.divide-slate-700 > * + * { border-color: #1e3a5f !important; }
+
+/* ─── Blue → gold/amber accent ─────────────────────── */
+.bg-blue-600  { background-color: #c9a84c !important; }
+.bg-blue-700  { background-color: #b8943d !important; }
+.hover\:bg-blue-600:hover { background-color: #c9a84c !important; }
+.hover\:bg-blue-700:hover { background-color: #b8943d !important; }
+
+.text-blue-400 { color: #c9a84c !important; }
+.text-blue-500 { color: #c9a84c !important; }
+.text-blue-300 { color: #e0c97a !important; }
+
+.border-blue-500 { border-color: #c9a84c !important; }
+.focus\:border-blue-500:focus { border-color: #c9a84c !important; }
+
+/* active sidebar link */
+.bg-blue-600.text-white {
+    background-color: #c9a84c !important;
+    color: #080d1a !important;
+}
+
+/* ─── Gradient card overrides ───────────────────────── */
+/* Green income cards stay green — good contrast */
+/* Red expense cards stay red */
+/* Blue → deep gold */
+.from-blue-500  { --tw-gradient-from: #c9a84c !important; }
+.to-blue-700    { --tw-gradient-to:   #8a6a1e !important; }
+.from-blue-600  { --tw-gradient-from: #c9a84c !important; }
+
+/* Purple → deep teal */
+.from-purple-500 { --tw-gradient-from: #0e7490 !important; }
+.to-purple-700   { --tw-gradient-to:   #0c5a70 !important; }
+
+/* Indigo → slate-blue */
+.from-indigo-500 { --tw-gradient-from: #1e40af !important; }
+.to-indigo-700   { --tw-gradient-to:   #1e3a8a !important; }
+
+/* Teal stays teal */
+/* Orange stays orange */
+
+/* ─── Card & panel polish ───────────────────────────── */
+.rounded-2xl {
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+.shadow-xl {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+}
+
+.shadow-2xl {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* ─── Sidebar brand text ────────────────────────────── */
+aside h1 {
+    background: linear-gradient(135deg, #c9a84c, #e0c97a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ─── Input & select polish ─────────────────────────── */
+input, select, textarea {
+    color: #e2e8f0 !important;
+    outline: none;
+}
+
+input::placeholder, textarea::placeholder {
+    color: #4a6080 !important;
+}
+
+/* ─── Table row hover ───────────────────────────────── */
+.hover\:bg-slate-700\/50:hover {
+    background-color: rgba(22, 36, 68, 0.5) !important;
+}
+
+/* ─── Recharts tooltip ──────────────────────────────── */
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+    background: #0d1424 !important;
+    border: 1px solid #1e3a5f !important;
+    border-radius: 12px !important;
+}
+
+/* ─── Animate pulse skeleton color ─────────────────── */
+.animate-pulse {
+    background-color: #111d35 !important;
+}
+
+/* ─── Auth page background ──────────────────────────── */
+.min-h-screen.bg-slate-900 {
+    background: linear-gradient(135deg, #080d1a 0%, #0d1a2e 50%, #0a1628 100%) !important;
+}
+
+/* ─── Subtle top border accent on cards ─────────────── */
+.bg-slate-900.rounded-2xl {
+    border-top: 1px solid rgba(201, 168, 76, 0.08);
+}
