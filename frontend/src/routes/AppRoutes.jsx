@@ -7,6 +7,10 @@ import Expenses from "../pages/Expenses";
 import Budget from "../pages/Budget";
 import Analytics from "../pages/Analytics";
 import AIAdvisor from "../pages/AIAdvisor";
+import AIForecast from "../pages/AIForecast";
+import AISavingsPlanner from "../pages/AISavingsPlanner";
+import AIReport from "../pages/AIReport";
+import ReceiptScanner from "../pages/ReceiptScanner";
 import Settings from "../pages/Settings";
 import RecurringExpenses from "../pages/RecurringExpenses";
 import Goals from "../pages/Goals";
@@ -44,6 +48,11 @@ const router = createBrowserRouter([
             { path: "/budget",    element: <Budget />            },
             { path: "/analytics", element: <Analytics />         },
             { path: "/ai",        element: <AIAdvisor />         },
+            { path: "/ai-forecast", element: <AIForecast /> },
+            { path: "/ai-savings-planner", element: <AISavingsPlanner /> },
+            { path: "/receipt-scanner", element: <ReceiptScanner /> },
+            { path: "/monthly-ai-report", element: <AIReport /> },
+            { path: "/yearly-ai-report", element: <AIReport /> },
             { path: "/goals",     element: <Goals />             },
             { path: "/settings",  element: <Settings />          },
         ],

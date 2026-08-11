@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
 
 import DashboardCards from "../components/dashboard/DashboardCards";
 import DashboardNotifications from "../components/dashboard/DashboardNotifications";
@@ -9,6 +10,7 @@ import AIInsightsCard from "../components/dashboard/AIInsightsCard";
 import CategoryPieChart from "../components/charts/CategoryPieChart";
 import ExpenseBarChart from "../components/charts/ExpenseBarChart";
 import RecentTransactions from "../components/tables/RecentTransactions";
+import AIDashboardSummaryCard from "../components/dashboard/AIDashboardSummaryCard";
 import { SkeletonDashboard } from "../components/common/Skeleton";
 
 import { getDashboardData } from "../services/dashboardService";
@@ -41,6 +43,20 @@ const Dashboard = () => {
             try {
                 const data = await getDashboardData(controller.signal);
                 setDashboard(data);
+
+                if (Array.isArray(data?.notifications)) {
+                    data.notifications.forEach((notification) => {
+                        const toastType = notification.type === "error"
+                            ? "error"
+                            : notification.type === "warning"
+                                ? "warning"
+                                : "info";
+
+                        toast[toastType](notification.message, {
+                            autoClose: 5000,
+                        });
+                    });
+                }
             } catch (error) {
                 if (error.name === "CanceledError" || error.name === "AbortError") return;
                 console.error(error);
@@ -102,6 +118,10 @@ const Dashboard = () => {
                     <AIInsightsCard dashboard={dashboard} />
                 </div>
             )}
+
+            <div className="mt-8">
+                <AIDashboardSummaryCard />
+            </div>
 
             {dashboard && (
                 <div className="grid lg:grid-cols-2 gap-6 mt-8">

@@ -117,8 +117,56 @@ const getDashboard = async (req, res) => {
         // Monthly Expenses
         // ==========================
 
+        const today = new Date();
         const currentYear =
-            new Date().getFullYear();
+            today.getFullYear();
+
+        const currentMonthNumber =
+            today.getMonth() + 1;
+
+        const previousMonthNumber =
+            currentMonthNumber === 1
+                ? 12
+                : currentMonthNumber - 1;
+
+        const previousYear =
+            currentMonthNumber === 1
+                ? currentYear - 1
+                : currentYear;
+
+        const currentMonthStart = new Date(currentYear, currentMonthNumber - 1, 1);
+        const currentMonthEnd = new Date(currentYear, currentMonthNumber, 0, 23, 59, 59, 999);
+        const previousMonthStart = new Date(previousYear, previousMonthNumber - 1, 1);
+        const previousMonthEnd = new Date(previousYear, previousMonthNumber, 0, 23, 59, 59, 999);
+
+        const currentMonthExpenses = await Expense.find({
+            user: userObjectId,
+            date: {
+                $gte: currentMonthStart,
+                $lte: currentMonthEnd,
+            },
+        }).lean();
+
+        const previousMonthExpenses = await Expense.find({
+            user: userObjectId,
+            date: {
+                $gte: previousMonthStart,
+                $lte: previousMonthEnd,
+            },
+        }).lean();
+
+        const currentMonthTotal = currentMonthExpenses.reduce((sum, item) => sum + item.amount, 0);
+        const previousMonthTotal = previousMonthExpenses.reduce((sum, item) => sum + item.amount, 0);
+
+        const currentCategoryTotals = {};
+        currentMonthExpenses.forEach((expense) => {
+            currentCategoryTotals[expense.category] = (currentCategoryTotals[expense.category] || 0) + expense.amount;
+        });
+
+        const previousCategoryTotals = {};
+        previousMonthExpenses.forEach((expense) => {
+            previousCategoryTotals[expense.category] = (previousCategoryTotals[expense.category] || 0) + expense.amount;
+        });
 
         const monthlyExpenses =
             await Expense.aggregate([
@@ -201,6 +249,16 @@ const getDashboard = async (req, res) => {
         const currentMonth =
             new Date().getMonth() + 1;
 
+        const previousMonth =
+            currentMonth === 1
+                ? 12
+                : currentMonth - 1;
+
+        const previousBudgetYear =
+            currentMonth === 1
+                ? currentYear - 1
+                : currentYear;
+
         const budgetData =
             await Budget.findOne({
 
@@ -212,9 +270,21 @@ const getDashboard = async (req, res) => {
 
             });
 
+        const previousBudgetData =
+            await Budget.findOne({
+                user: userObjectId,
+                month: previousMonth,
+                year: previousBudgetYear,
+            });
+
         const budget =
             budgetData
                 ? budgetData.amount
+                : 0;
+
+        const previousBudgetAmount =
+            previousBudgetData
+                ? previousBudgetData.amount
                 : 0;
 
         const remainingBudget =
@@ -299,66 +369,89 @@ const getDashboard = async (req, res) => {
 
         const notifications = [];
 
-        if (budget > 0) {
-
-            const usage = (totalExpenses / budget) * 100;
-
-            if (usage >= 100) {
-
-                notifications.push({
-
-                    type: "error",
-
-                    title: "Budget Exceeded",
-
-                    message: `You have exceeded your monthly budget by ₹${Math.abs(remainingBudget).toFixed(2)}.`,
-
-                });
-
-            }
-
-            else if (usage >= 90) {
-
-                notifications.push({
-
-                    type: "warning",
-
-                    title: "Budget Almost Exhausted",
-
-                    message: "You have already used more than 90% of your monthly budget.",
-
-                });
-
-            }
-
-            else if (usage <= 50) {
-
-                notifications.push({
-
-                    type: "success",
-
-                    title: "Excellent Budget Control",
-
-                    message: "Great job! You have used less than 50% of your monthly budget.",
-
-                });
-
-            }
-
+        if (!budgetData && previousBudgetAmount > 0) {
+            notifications.push({
+                type: "info",
+                title: "Monthly Budget Reset Needed",
+                message: `Your budget for ${monthNames[currentMonth - 1]} is not set yet. You can reuse your previous month budget of ₹${previousBudgetAmount.toLocaleString("en-IN")} or set a new one manually.`,
+                action: "rollover-budget",
+                suggestedBudgetAmount: previousBudgetAmount,
+                month: currentMonth,
+                year: currentYear,
+            });
+        } else if (!budgetData) {
+            notifications.push({
+                type: "info",
+                title: "Set Your Monthly Budget",
+                message: `Your budget for ${monthNames[currentMonth - 1]} has not been configured yet. Set a monthly budget to start tracking your spending accurately.`,
+            });
         }
 
-        if (highestExpense && highestExpense.amount >= 5000) {
+        if (budget > 0) {
+            const usage = (currentMonthTotal / budget) * 100;
+            const remainingThisMonth = budget - currentMonthTotal;
+
+            if (usage >= 100) {
+                notifications.push({
+                    type: "error",
+                    title: "Budget Exceeded",
+                    message: `You have exceeded your monthly budget by ₹${Math.abs(remainingThisMonth).toFixed(2)}.`,
+                });
+            } else if (usage >= 90) {
+                notifications.push({
+                    type: "warning",
+                    title: "Budget Almost Exhausted",
+                    message: "You have already used more than 90% of your monthly budget.",
+                });
+            } else if (remainingThisMonth <= budget * 0.15) {
+                notifications.push({
+                    type: "info",
+                    title: "Low Remaining Budget",
+                    message: `You have only ₹${Math.max(0, remainingThisMonth).toFixed(2)} left in your monthly budget.`,
+                });
+            } else if (usage <= 50) {
+                notifications.push({
+                    type: "success",
+                    title: "Excellent Budget Control",
+                    message: "Great job! You have used less than 50% of your monthly budget.",
+                });
+            }
+        }
+
+        if (currentMonthTotal > 0 && previousMonthTotal > 0) {
+            const increasePercent = ((currentMonthTotal - previousMonthTotal) / Math.max(previousMonthTotal, 1)) * 100;
+
+            if (increasePercent >= 25) {
+                notifications.push({
+                    type: "warning",
+                    title: "Unusual Spending Increase",
+                    message: `Your spending is up by ${Math.round(increasePercent)}% compared to last month.`,
+                });
+            }
+        }
+
+        const categorySpikeEntries = Object.entries(currentCategoryTotals).filter(([category, amount]) => {
+            const previousAmount = previousCategoryTotals[category] || 0;
+            return amount >= 2000 && previousAmount > 0 && amount > previousAmount * 1.35;
+        });
+
+        categorySpikeEntries.forEach(([category, amount]) => {
+            const previousAmount = previousCategoryTotals[category] || 0;
+            const increasePercent = ((amount - previousAmount) / Math.max(previousAmount, 1)) * 100;
 
             notifications.push({
-
-                type: "info",
-
-                title: "Large Expense",
-
-                message: `${highestExpense.title} cost ₹${highestExpense.amount}.`,
-
+                type: "warning",
+                title: "Category Spending Spike",
+                message: `${category} spending increased by ${Math.round(increasePercent)}% compared to last month.`,
             });
+        });
 
+        if (highestExpense && highestExpense.amount >= 5000) {
+            notifications.push({
+                type: "info",
+                title: "Large Expense",
+                message: `${highestExpense.title} cost ₹${highestExpense.amount}.`,
+            });
         }
 
         // ==========================

@@ -10,6 +10,8 @@ import {
     FaRedoAlt,
     FaBullseye,
     FaArrowUp,
+    FaFileAlt,
+    FaCamera,
 } from "react-icons/fa";
 
 const NAV = [
@@ -21,15 +23,27 @@ const NAV = [
     { to: "/analytics",  icon: <FaChartPie />,       label: "Analytics"     },
     { to: "/goals",      icon: <FaBullseye />,       label: "Savings Goal"  },
     { to: "/ai",         icon: <FaRobot />,          label: "AI Advisor"    },
+    { to: "/ai-forecast", icon: <FaChartLine />,     label: "AI Forecast"   },
+    { to: "/ai-savings-planner", icon: <FaBullseye />, label: "AI Savings Planner" },
+    { to: "/monthly-ai-report", icon: <FaFileAlt />, label: "AI Report" },
+    { to: "/receipt-scanner", icon: <FaCamera />, label: "Receipt Scanner" },
     { to: "/settings",   icon: <FaCog />,            label: "Settings"      },
 ];
 
 const Sidebar = () => {
     const location = useLocation();
 
+    const isActiveRoute = (path) => {
+        if (path === "/monthly-ai-report") {
+            return ["/monthly-ai-report", "/yearly-ai-report"].includes(location.pathname);
+        }
+
+        return location.pathname === path;
+    };
+
     const menuClass = (path) =>
         `flex items-center gap-3 p-3 rounded-lg transition-all duration-300 ${
-            location.pathname === path
+            isActiveRoute(path)
                 ? "bg-blue-600 text-white"
                 : "hover:bg-slate-800 hover:text-blue-400"
         }`;

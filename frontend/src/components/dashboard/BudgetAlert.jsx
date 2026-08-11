@@ -6,7 +6,21 @@ import {
 
 const BudgetAlert = ({ budget, remaining }) => {
 
-    if (!budget) return null;
+    if (!budget) {
+        return (
+            <div className="bg-slate-800 rounded-2xl p-6 border-l-4 border-blue-500 text-blue-300">
+                <div className="flex items-center gap-4">
+                    <FaExclamationTriangle size={30} />
+                    <div>
+                        <h2 className="text-2xl font-bold">Set Monthly Budget</h2>
+                        <p className="mt-2 text-slate-300">
+                            No budget is set for this month yet. Set a monthly budget to track spending and receive better alerts.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     const spent = budget - remaining;
 
