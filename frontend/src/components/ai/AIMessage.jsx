@@ -40,7 +40,7 @@ const AIMessage = ({ sender, text }) => {
         >
 
             <div
-                className={`relative max-w-[80%] rounded-2xl px-5 py-4 shadow-lg break-words ${
+                className={`relative w-full max-w-[92%] rounded-2xl px-5 py-4 shadow-lg break-words ${
                     isUser
                         ? "bg-blue-600 text-white"
                         : "bg-slate-800 text-white"

@@ -1,4 +1,5 @@
 const axios = require("axios");
+const https = require("https");
 
 const {
     buildFinancialPrompt,
@@ -192,6 +193,27 @@ const extractJson = (content) => {
     }
 };
 
+const isLikelyTruncatedResponse = (text) => {
+    if (!text) return true;
+
+    const trimmed = String(text).trim();
+    if (trimmed.length < 80) return false;
+
+    const lastChar = trimmed.slice(-1);
+    const endsWithSentencePunctuation = /[.!?]$/.test(trimmed) || /[.!?]["')\]]$/.test(trimmed);
+    const endsWithContinuation = /\b(and|or|but|because|if|when|while|to|you'd|you’ll|you\s+can|your|budget|goal|target|remaining)\s*$/i.test(trimmed);
+
+    return !endsWithSentencePunctuation && !trimmed.endsWith("...") && !endsWithContinuation && lastChar !== "}" && lastChar !== "]";
+};
+
+const getGroqHttpsAgent = () => {
+    if (process.env.ALLOW_INSECURE_SSL === "true" || process.env.ALLOW_INSECURE_SSL === "1") {
+        return new https.Agent({ rejectUnauthorized: false });
+    }
+
+    return undefined;
+};
+
 const callGroq = async (prompt, maxTokens = 700) => {
     if (!process.env.GROQ_API_KEY) {
         return null;
@@ -201,7 +223,7 @@ const callGroq = async (prompt, maxTokens = 700) => {
         const response = await axios.post(
             "https://api.groq.com/openai/v1/chat/completions",
             {
-                model: "llama-3.1-8b-instant",
+                model: "openai/gpt-oss-20b",
                 messages: [
                     {
                         role: "user",
@@ -216,6 +238,7 @@ const callGroq = async (prompt, maxTokens = 700) => {
                     Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
                     "Content-Type": "application/json",
                 },
+                httpsAgent: getGroqHttpsAgent(),
             }
         );
 
@@ -226,15 +249,36 @@ const callGroq = async (prompt, maxTokens = 700) => {
     }
 };
 
+const callGroqWithRetry = async (prompt, maxTokens = 700, retryCount = 1) => {
+    const primary = await callGroq(prompt, maxTokens);
+
+    if (!primary) {
+        return null;
+    }
+
+    if (!isLikelyTruncatedResponse(primary) || retryCount <= 0) {
+        return primary;
+    }
+
+    const retryTokens = Math.max(maxTokens + 300, 1000);
+    const retryResponse = await callGroq(prompt, retryTokens);
+
+    if (!retryResponse || isLikelyTruncatedResponse(retryResponse)) {
+        return retryResponse || primary;
+    }
+
+    return retryResponse;
+};
+
 const generateFinancialAdvice = async (financialData) => {
     const prompt = buildFinancialPrompt(financialData);
-    const answer = await callGroq(prompt);
+    const answer = await callGroqWithRetry(prompt, 1000);
     return answer || `Your current financial position is stable. Focus on reducing the biggest recurring spend categories and keep a steady savings transfer in place.`;
 };
 
 const askFinancialQuestion = async (financialData, question) => {
     const prompt = buildChatPrompt(financialData, question);
-    const answer = await callGroq(prompt);
+    const answer = await callGroqWithRetry(prompt, 1000);
     return answer || `I can see your current financial snapshot, but the AI service is temporarily unavailable. Please review your budget, expenses, and savings targets manually for now.`;
 };
 
@@ -249,7 +293,7 @@ const predictExpenseCategory = async (title, description, userId) => {
     }
 
     const prompt = buildCategoryPredictionPrompt(title, description);
-    const response = await callGroq(prompt, 400);
+    const response = await callGroqWithRetry(prompt, 500);
     const parsed = extractJson(response) || {};
 
     const fallbackTopCategories = ["Food", "Bills", "Transport"];
@@ -276,7 +320,7 @@ const predictExpenseCategory = async (title, description, userId) => {
 
 const scanReceipt = async (receiptText, metadata = {}) => {
     const prompt = buildReceiptScanningPrompt(receiptText, metadata);
-    const response = await callGroq(prompt, 600);
+    const response = await callGroqWithRetry(prompt, 800);
     const parsed = extractJson(response) || {};
 
     const amount = Number(parsed.amount || 0);
@@ -302,7 +346,7 @@ const scanReceipt = async (receiptText, metadata = {}) => {
 
 const generateMonthlyReport = async (reportData) => {
     const prompt = buildMonthlyReportPrompt(reportData);
-    const response = await callGroq(prompt, 800);
+    const response = await callGroqWithRetry(prompt, 1200);
     const parsed = extractJson(response) || {};
 
     return {
@@ -321,7 +365,7 @@ const generateMonthlyReport = async (reportData) => {
 
 const generateYearlyReport = async (reportData) => {
     const prompt = buildYearlyReportPrompt(reportData);
-    const response = await callGroq(prompt, 900);
+    const response = await callGroqWithRetry(prompt, 1200);
     const parsed = extractJson(response) || {};
 
     return {
@@ -340,7 +384,7 @@ const generateYearlyReport = async (reportData) => {
 
 const generateSpendingPrediction = async (predictionData) => {
     const prompt = buildSpendingPredictionPrompt(predictionData);
-    const response = await callGroq(prompt, 600);
+    const response = await callGroqWithRetry(prompt, 800);
     const parsed = extractJson(response) || {};
 
     const heuristic = getHeuristicPrediction(predictionData);
@@ -356,7 +400,7 @@ const generateSpendingPrediction = async (predictionData) => {
 
 const generateBudgetPlan = async (planInput) => {
     const prompt = buildBudgetPlanPrompt(planInput);
-    const response = await callGroq(prompt, 600);
+    const response = await callGroqWithRetry(prompt, 800);
     const parsed = extractJson(response) || {};
 
     const heuristic = getHeuristicBudgetPlan(planInput);
@@ -376,7 +420,7 @@ const generateBudgetPlan = async (planInput) => {
 
 const generateDashboardSummary = async (financialData) => {
     const prompt = buildDashboardSummaryPrompt(financialData);
-    const response = await callGroq(prompt, 600);
+    const response = await callGroqWithRetry(prompt, 800);
     const parsed = extractJson(response) || {};
 
     const heuristic = getHeuristicDashboardSummary(financialData);
@@ -394,7 +438,7 @@ const generateDashboardSummary = async (financialData) => {
 
 const generateGoalPlan = async (goalData) => {
     const prompt = buildGoalPlanPrompt(goalData);
-    const response = await callGroq(prompt, 600);
+    const response = await callGroqWithRetry(prompt, 800);
     const parsed = extractJson(response) || {};
 
     const heuristic = getHeuristicGoalPlan(goalData);
