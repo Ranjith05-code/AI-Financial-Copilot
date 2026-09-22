@@ -1,6 +1,6 @@
 import { FaWallet, FaMoneyBillWave, FaChartPie, FaPiggyBank, FaArrowUp, FaCoins } from "react-icons/fa";
 
-const AnalyticsCards = ({ totalExpenses, totalIncome, budget, remainingBudget, topCategory, netSavings }) => {
+const AnalyticsCards = ({ totalExpenses, totalIncome, budget, topCategory, netSavings }) => {
     const savingsRate = totalIncome > 0 ? ((netSavings / totalIncome) * 100).toFixed(1) : 0;
 
     const cards = [

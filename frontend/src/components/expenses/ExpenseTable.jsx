@@ -1,5 +1,3 @@
-import { useState, useEffect } from "react";
-
 import ExpenseRow from "./ExpenseRow";
 import EmptyExpense from "./EmptyExpense";
 
@@ -17,18 +15,7 @@ const ExpenseTable = ({
     onRowsPerPageChange,
 }) => {
 
-    const [page, setPage] = useState(currentPage || 1);
-
-    useEffect(() => {
-
-        setPage(currentPage);
-
-    }, [currentPage]);
-
     const handlePageChange = (newPage) => {
-
-        setPage(newPage);
-
         onPageChange(newPage);
 
     };
@@ -149,7 +136,7 @@ const ExpenseTable = ({
 
                 <Pagination
 
-                    currentPage={page}
+                    currentPage={currentPage}
 
                     totalPages={totalPages}
 

@@ -31,7 +31,7 @@ const ExpenseFilters = ({
 
         setFilteredExpenses(filtered);
 
-    }, [expenses, search, category, sortBy, order]);
+    }, [expenses, search, category, sortBy, order, setFilteredExpenses]);
 
     return (
 

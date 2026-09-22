@@ -24,7 +24,7 @@ const AIAdvisor = () => {
 
         loadAdvice();
 
-    }, []);
+    }, [loadAdvice]);
 
     return (
 

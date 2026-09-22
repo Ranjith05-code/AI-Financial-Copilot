@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 import {
@@ -35,7 +35,7 @@ const useAI = () => {
 
     }, [messages]);
 
-    const loadAdvice = async () => {
+    const loadAdvice = useCallback(async () => {
 
         if (messages.length > 0) return;
 
@@ -64,7 +64,7 @@ const useAI = () => {
 
         }
 
-    };
+    }, [messages.length]);
 
     const sendMessage = async (question) => {
 

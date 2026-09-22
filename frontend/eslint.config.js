@@ -17,5 +17,9 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+    rules: {
+      // This project uses effects for data loading and controlled form synchronization.
+      'react-hooks/set-state-in-effect': 'off',
+    },
   },
 ])

@@ -82,7 +82,7 @@ const AddExpenseModal = ({
 
         const dateMatch = text.match(/\b(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})\b/);
         if (dateMatch) {
-            const [_, first, second, year] = dateMatch;
+            const [, first, second, year] = dateMatch;
             const parsedDate = new Date(`${year}-${first}-${second}`);
             if (!Number.isNaN(parsedDate.getTime())) {
                 return parsedDate.toISOString().split("T")[0];
